@@ -2,8 +2,8 @@
 FROM python:3.11-slim
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -17,13 +17,14 @@ WORKDIR /app
 # Clone Sherlock
 RUN git clone https://github.com/sherlock-project/sherlock.git .
 
-# Install Sherlock dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Sherlock via pyproject.toml (Poetry-based)
+RUN pip install --no-cache-dir .
 
-# Copy our custom backend logic
+# Install our custom backend dependencies
 COPY requirements.txt /tmp/backend-requirements.txt
 RUN pip install --no-cache-dir -r /tmp/backend-requirements.txt
 
+# Copy our custom backend logic
 COPY ./app /app/app
 COPY ./data /app/data
 
