@@ -1,90 +1,22 @@
-# Sherlock App — Agent Guide
+# Repository Guide
 
-## Overview
+## Structure
 
-Sherlock App is a Cyberpunk-themed OSINT dashboard with two components:
+- `frontend/` is the Vue 3/Vite/Tailwind app; its entrypoint is `src/main.js` and the main UI is `src/App.vue`.
+- `backend/` is the FastAPI app; `app/main.py` serves the API and the compiled frontend, while `app/runner.py` invokes the external `sherlock` executable.
+- `GET /search/{username}` is an SSE endpoint. Keep the backend event names (`status`, `match`, `done`, `error`) in sync with `frontend/src/App.vue`.
+- `backend/data/` is runtime data mounted by Compose and ignored by Git; do not commit local history or generated files from it.
 
-- **Backend** — Python FastAPI service running Sherlock search engine on port `8000`.
-- **Frontend** — Vue 3 + Vite SPA served via Nginx on port `80` (mapped to `8080` externally).
+## Commands
 
-Both components are Dockerized and pushed to Docker Hub as separate images.
+- Use pnpm, not npm: the frontend lockfile and `package.json` pin pnpm 10.12.1. From `frontend/`, run `pnpm install`, `pnpm dev`, `pnpm build`, or `pnpm preview`.
+- For local backend work, from `backend/` create/activate the virtualenv, run `pip install -r requirements.txt`, then install `sherlock-project` before `uvicorn app.main:app --reload`; the requirements file does not provide the Sherlock CLI.
+- From the repository root, use `docker compose up -d --build`; `backend/Dockerfile` uses the root context and produces one image containing both services on port 8000.
+- There are no configured automated tests, lint scripts, typechecks, or formatters. At minimum run `pnpm build` after frontend changes and manually smoke-test backend/API changes.
 
-## Image Tags
+## Configuration
 
-| Component | Docker Image |
-|-----------|-------------|
-| Backend  | `arturoalvarez/sherlock-backend:latest` |
-| Frontend | `arturoalvarez/sherlock-frontend:v1.5` |
-
-## Local Build & Push
-
-### Prerequisites
-
-- Docker (with buildx for multi-arch)
-- Logged into Docker Hub (`docker login`)
-
-### Backend
-
-```bash
-docker build -t arturoalvarez/sherlock-backend:latest ./backend
-docker push arturoalvarez/sherlock-backend:latest
-```
-
-### Frontend
-
-```bash
-docker build -t arturoalvarez/sherlock-frontend:v1.5 ./frontend
-docker push arturoalvarez/sherlock-frontend:v1.5
-```
-
-### Multi-Arch (ARM64 + AMD64)
-
-```bash
-docker buildx build --platform linux/amd64,linux/arm64 \
-  -t arturoalvarez/sherlock-backend:latest ./backend --push
-
-docker buildx build --platform linux/amd64,linux/arm64 \
-  -t arturoalvarez/sherlock-frontend:v1.5 ./frontend --push
-```
-
-## CI/CD Pipeline
-
-The GitHub Actions workflow (`.github/workflows/deploy.yml`) automates:
-
-1. **Build** — Builds both backend and frontend Docker images.
-2. **Push** — Pushes both images to Docker Hub using `DOCKER_USERNAME` and `DOCKER_TOKEN` secrets.
-3. **Trigger** — Runs on every push to `main` branch, or can be triggered manually.
-
-### Secrets Required
-
-Configure these in the GitHub repository settings:
-
-| Secret | Description |
-|--------|-------------|
-| `DOCKER_USERNAME` | Docker Hub username (`arturoalvarez`) |
-| `DOCKER_TOKEN` | Docker Hub access token (or password) |
-
-## Local Development
-
-### Backend
-
-```bash
-cd backend
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-### Frontend
-
-```bash
-cd frontend
-pnpm install
-pnpm dev
-```
-
-### Docker Compose (full stack)
-
-```bash
-docker compose up -d --build
-```
+- `VITE_API_URL` is embedded by Vite at frontend build time. The integrated `backend/Dockerfile` accepts it as `ARG VITE_API_URL`; leave it empty for same-origin deployment.
+- Sherlock searches default to `SHERLOCK_TIMEOUT=120` and `SHERLOCK_IGNORE_EXCLUSIONS=true` in Compose; the latter can increase false positives. Override these environment variables when testing another search mode.
+- Backend CORS origins are hard-coded in `backend/app/main.py` for local development and the deployed frontend hostname. Update `ALLOWED_ORIGINS` when the frontend origin changes.
+- `.github/workflows/deploy.yml` builds and pushes the integrated image on pushes to `main`; it requires `DOCKER_USERNAME` and `DOCKER_TOKEN` secrets.

@@ -1,12 +1,12 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { Search, History, Terminal, ExternalLink, ShieldAlert, Cpu } from 'lucide-vue-next'
 
 const username = ref('')
 const results = ref([])
 const isSearching = ref(false)
 const statusMessage = ref('READY_FOR_SCAN')
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : window.location.origin)
 
 const startSearch = () => {
   if (!username.value || isSearching.value) return
@@ -15,7 +15,7 @@ const startSearch = () => {
   isSearching.value = true
   statusMessage.value = 'INITIALIZING_PROBE...'
 
-  const eventSource = new EventSource(`${apiUrl}/search/${username.value}`)
+  const eventSource = new EventSource(`${apiUrl.replace(/\/$/, '')}/search/${encodeURIComponent(username.value)}`)
 
   eventSource.addEventListener('status', (e) => {
     statusMessage.value = e.data.toUpperCase().replace(/\s+/g, '_')

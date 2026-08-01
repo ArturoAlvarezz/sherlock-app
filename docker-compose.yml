@@ -1,32 +1,17 @@
-version: '3.8'
-
 services:
-  backend:
+  app:
+    image: sherlock-app:test
     build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: sherlock-backend
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        VITE_API_URL: ""
+    container_name: sherlock-app-test
     volumes:
       - ./backend/data:/app/data
     environment:
-      - PORT=8000
+      SHERLOCK_TIMEOUT: ${SHERLOCK_TIMEOUT:-120}
+      SHERLOCK_IGNORE_EXCLUSIONS: ${SHERLOCK_IGNORE_EXCLUSIONS:-true}
     ports:
-      - "8000:8000"
-    restart: always
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: sherlock-frontend
-    environment:
-      - VITE_API_URL=https://sherlock-backend.arturoalvarez.site
-    ports:
-      - "8080:80"
-    restart: always
-    depends_on:
-      - backend
-
-networks:
-  default:
-    name: sherlock-network
+      - "8080:8000"
+    restart: unless-stopped

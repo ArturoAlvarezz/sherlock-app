@@ -1,8 +1,11 @@
 import json
 import asyncio
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse
+from fastapi.staticfiles import StaticFiles
 from app.runner import run_sherlock
 
 app = FastAPI(title="Cyberpunk Sherlock OSINT API")
@@ -21,7 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
+@app.get("/api/health")
 async def root():
     return {"status": "online", "message": "Cyberpunk OSINT Engine Ready"}
 
@@ -55,6 +58,11 @@ async def search_username(request: Request, username: str):
             yield {"event": "error", "data": str(e)}
 
     return EventSourceResponse(event_generator())
+
+
+frontend_dist = Path(__file__).resolve().parents[1] / "frontend"
+if frontend_dist.is_dir():
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn

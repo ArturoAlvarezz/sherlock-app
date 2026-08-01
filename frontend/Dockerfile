@@ -16,6 +16,8 @@ RUN pnpm install
 COPY . .
 
 # Build the application
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 RUN pnpm build
 
 # Stage 2: Serve
@@ -24,8 +26,8 @@ FROM nginx:stable-alpine AS production-stage
 # Copy built assets from build-stage
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 
-# Copy custom nginx config if needed (optional)
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy custom nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

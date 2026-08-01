@@ -1,12 +1,30 @@
 import asyncio
+import os
 import re
 
 async def run_sherlock(username: str):
     """
     Asynchronously executes Sherlock for a given username and yields each found URL.
     """
-    # Using 'sherlock' from pip
-    cmd = ["sherlock", username, "--no-color", "--print-found", "--nsfw", "--no-txt"]
+    # Exhaustive mode checks excluded sites too; this can increase false positives.
+    try:
+        timeout = max(1, int(os.getenv("SHERLOCK_TIMEOUT", "120")))
+    except ValueError:
+        timeout = 120
+
+    cmd = [
+        "sherlock",
+        username,
+        "--no-color",
+        "--print-found",
+        "--nsfw",
+        "--no-txt",
+        "--timeout",
+        str(timeout),
+    ]
+
+    if os.getenv("SHERLOCK_IGNORE_EXCLUSIONS", "true").lower() in {"1", "true", "yes", "on"}:
+        cmd.append("--ignore-exclusions")
     
     process = await asyncio.create_subprocess_exec(
         *cmd,

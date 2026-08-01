@@ -14,29 +14,44 @@ A modern, Cyberpunk-themed OSINT dashboard for the Sherlock search engine.
 1. `cd backend`
 2. `python3 -m venv venv && source venv/bin/activate`
 3. `pip install -r requirements.txt`
-4. `uvicorn app.main:app --reload`
+4. `pip install sherlock-project`
+5. `uvicorn app.main:app --reload`
 
 ### Frontend
 1. `cd frontend`
 2. `pnpm install`
 3. `pnpm dev`
 
-## Docker Deployment (ARM64)
+### Search Configuration
 
-To build and push images for ARM64 architecture (e.g., for Raspberry Pi or Apple Silicon servers):
+The container runs Sherlock in exhaustive mode by default:
+
+- `SHERLOCK_TIMEOUT=120`: maximum seconds to wait for each site response.
+- `SHERLOCK_IGNORE_EXCLUSIONS=true`: also checks sites excluded by Sherlock upstream; this can produce more false positives.
+- NSFW checks remain enabled through the fixed `--nsfw` option.
+
+Override these values when starting Compose if needed:
 
 ```bash
-# Backend
-docker buildx build --platform linux/arm64 -t your-dockerhub-user/sherlock-backend:latest ./backend --push
+SHERLOCK_TIMEOUT=180 SHERLOCK_IGNORE_EXCLUSIONS=false docker-compose up -d --build
+```
 
-# Frontend
-docker buildx build --platform linux/arm64 -t your-dockerhub-user/sherlock-frontend:latest ./frontend --push
+## Docker Deployment (ARM64)
+
+To build and push the single application image for ARM64 architecture (e.g., for Raspberry Pi or Apple Silicon servers):
+
+```bash
+docker buildx build --platform linux/arm64 -f backend/Dockerfile -t your-dockerhub-user/sherlock-app:latest . --push
 ```
 
 ### Docker Compose
 ```bash
 docker-compose up -d --build
 ```
+
+The container serves the Vue application and FastAPI from the same origin on port `8000`.
+Expose it through one subdomain (for example, `sherlock.example.com`) using the reverse proxy or TLS terminator on the host.
+For the local Compose test, open `http://localhost:8080`.
 
 ## Git Initialization
 
