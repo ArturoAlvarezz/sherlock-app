@@ -12,7 +12,7 @@ app = FastAPI(title="Cyberpunk Sherlock OSINT API")
 
 # Configure CORS for the frontend URL
 ALLOWED_ORIGINS = [
-    "https://sherlock.arturoalvarez.site",
+    "https://sherlock.arturoalvarez.dev",
     "http://localhost:5173", # For local development
 ]
 
