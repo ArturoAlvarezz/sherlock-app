@@ -3,7 +3,7 @@ services:
     image: sherlock-app:test
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: Dockerfile
       args:
         VITE_API_URL: ""
     container_name: sherlock-app-test
