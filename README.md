@@ -41,7 +41,7 @@ SHERLOCK_TIMEOUT=180 SHERLOCK_IGNORE_EXCLUSIONS=false docker-compose up -d --bui
 To build and push the single application image for ARM64 architecture (e.g., for Raspberry Pi or Apple Silicon servers):
 
 ```bash
-docker buildx build --platform linux/arm64 -f backend/Dockerfile -t your-dockerhub-user/sherlock-app:latest . --push
+docker buildx build --platform linux/arm64 -f Dockerfile -t your-dockerhub-user/sherlock-app:latest . --push
 ```
 
 ### Docker Compose
